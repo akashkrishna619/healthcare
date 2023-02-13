@@ -75,15 +75,22 @@ function hide_book_btn() {
     // book_button.onclick = () => frappe.msgprint(__("Please select a date and time"));
 }
 
-function show_book_btn(selected_slot) {
+function show_book_btn(selected_slot, tele_conf) {
 	window.selected_slot = selected_slot
-    let book_button = document.getElementById('book-button');
+	let book_button = document.getElementById('book-button');
     book_button.disabled = false;
+	if (tele_conf)  {
+		if (parseInt(tele_conf)) {
+			$(".opt-out-conf-div").removeClass("hide-sec");
+		} else {
+			$(".opt-out-conf-div").addClass("hide-sec");
+		}
+	}
     book_button.onclick = book_appointment;
 }
 
 async function update_time_slots(selected_date, selected_timezone) {
-	let timeslot_container = document.getElementById('slot_container');
+	let timeslot_container = document.getElementById('fh-slot-container');
 	window.slots = await get_time_slots(selected_date, selected_timezone);
 	clear_slots();
 	if (window.slots.length <= 0) {
@@ -99,7 +106,7 @@ async function update_time_slots(selected_date, selected_timezone) {
 }
 
 function clear_slots() {
-	let timeslot_container = document.getElementById('slot_container');
+	let timeslot_container = document.getElementById('fh-slot-container');
 	while (timeslot_container.firstChild) {
 		timeslot_container.removeChild(timeslot_container.firstChild);
 	}
@@ -184,8 +191,11 @@ function get_slots(slot_details) {
 			<button class="btn btn-secondary btn-appointment" data-name='${start_str}'
 				data-duration=${interval}
 				data-service-unit="${slot_info.service_unit || ''}"
+				data-tele-conf="${slot_info.tele_conf || 0}"
 				${disabled ? 'disabled="disabled"' : ""}
-				data-toggle="tooltip" title="${tool_tip || ''}" onclick="slot_btn_on_click('${start_str}', '${appointment_date}', '${slot_info.service_unit || ''}')">
+				data-toggle="tooltip" title="${tool_tip || ''}" onclick="slot_btn_on_click(
+					'${start_str}', '${appointment_date}', '${slot_info.service_unit || ''}',
+					'${interval}', '${slot_info.tele_conf || 0}')">
 				${display_time_slot.substring(0, display_time_slot.length - 3)}
 				${slot_info.service_unit_capacity ? `<br><span class='badge ${count_class}'> ${count} </span>` : ''}
 			</button>`;
@@ -201,14 +211,20 @@ function get_slots(slot_details) {
 	return slot_html;
 }
 
-function slot_btn_on_click(selected_slot, selected_date, service_unit){
+function slot_btn_on_click(selected_slot, selected_date, service_unit, duration, tele_conf){
 	window.selected_date = selected_date
 	window.service_unit = service_unit
-	show_book_btn(selected_slot)
+	window.duration = duration
+	show_book_btn(selected_slot, tele_conf)
 }
 
 
 function book_appointment(){
+	$(".portal-full-section").addClass("freeze-div");
+	frappe.show_alert({
+		message: __("Appointment Booking..."),
+		indicator: "info"
+	  });
 	let patient_id = document.getElementById('patient-list');
 	frappe.call({
 		method: 'healthcare.www.book_patient_appointment.book_appointment',
@@ -217,7 +233,9 @@ function book_appointment(){
 			patient: patient_id.value,
 			date: window.selected_date,
 			time: window.selected_slot,
+			duration: window.duration,
 			service_unit : window.service_unit,
+			opt_out_vconf: $(".opt-out-check").is(":checked")? 1 : 0,
 		},
 		callback: (r) => {
 			if(!r.exc && r.message) {
@@ -226,9 +244,10 @@ function book_appointment(){
 				document.getElementById(
 					"success-practitioner"
 				).innerHTML = `
-					with <b>${r.message[1] ? r.message[1] : selected_practitioner}</b>
-					<br>on <b>${window.selected_date}</b>
-					 at <b>${window.selected_slot}</b>`;
+					Date : <b>12-2-2022</b><br>
+					Time : <b>10:58</b><br>
+					Practitioner : <b>Akash Krishna</b>
+					`;
 				if (success_url) {
 					frappe.utils.setup_timer(5, 0, $(".time"));
 					setTimeout(() => {
@@ -236,6 +255,7 @@ function book_appointment(){
 					}, 5000);
 				}
 			}
+			$(".portal-full-section").removeClass("freeze-div");
 		}
 	})
 }

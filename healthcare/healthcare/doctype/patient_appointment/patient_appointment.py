@@ -203,12 +203,13 @@ class PatientAppointment(Document):
 			return
 
 		fee_validity = manage_fee_validity(self)
-		if fee_validity:
+		if fee_validity and not self.flags.silent:
 			frappe.msgprint(
 				_("{0}: {1} has fee validity till {2}").format(
 					self.patient, frappe.bold(self.patient_name), fee_validity.valid_till
 				)
 			)
+		self.flags.silent = False
 
 	def insert_calendar_event(self):
 		starts_on = datetime.datetime.combine(
@@ -225,7 +226,6 @@ class PatientAppointment(Document):
 			color = frappe.db.get_value("Appointment Type", self.appointment_type, "color")
 		else:
 			color = ""
-
 		event = frappe.get_doc(
 			{
 				"doctype": "Event",
