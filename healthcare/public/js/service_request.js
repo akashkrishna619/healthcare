@@ -1,5 +1,5 @@
 
-frappe.ui.form.on(cur_frm.doctype, {
+frappe.ui.form.on(frm.doctype, {
     onload: function(frm) {
         if (frm.doc.__islocal) {
 			frm.set_value('order_time', frappe.datetime.now_time())
@@ -86,7 +86,7 @@ frappe.ui.form.on(cur_frm.doctype, {
 			async: false,
 			freeze: true,
 			args: {
-				doctype: cur_frm.doctype,
+				doctype: frm.doctype,
 				request: frm.doc.name,
 				status: status
 			},
