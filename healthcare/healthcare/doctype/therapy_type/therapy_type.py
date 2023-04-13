@@ -40,7 +40,7 @@ class TherapyType(Document):
 			item_doc.ignore_mandatory = True
 			item_doc.save(ignore_permissions=True)
 
-			if self.rate:
+			if self.rate and frappe.db.exists("Item Price", {"item_code": self.item}):
 				item_price = frappe.get_doc("Item Price", {"item_code": self.item})
 				item_price.item_name = self.item_name
 				item_price.price_list_rate = self.rate
