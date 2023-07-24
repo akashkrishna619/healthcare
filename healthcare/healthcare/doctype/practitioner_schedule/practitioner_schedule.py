@@ -21,6 +21,7 @@ class PractitionerSchedule(Document):
 					)
 					maximum_apps = abs(time_diff_in_mins) / slots.get("duration")
 					if slots.get("maximum_appointments") > maximum_apps:
-						frappe.throw(
-							_(f"""Maximum appointments cannot be more than {maximum_apps} in row {slots.get("idx")}.""")
+						msg = _("Maximum appointments cannot be more than {0}in row {1}").format(
+							maximum_apps, slots.get("idx")
 						)
+						frappe.throw(msg)
