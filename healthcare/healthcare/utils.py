@@ -569,7 +569,6 @@ def set_invoiced(item, method, ref_invoice=None):
 			}
 
 
-
 def validate_invoiced_on_submit(item):
 	if (
 		item.reference_dt == "Clinical Procedure"
