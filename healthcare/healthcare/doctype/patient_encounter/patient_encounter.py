@@ -209,6 +209,8 @@ class PatientEncounter(Document):
 				"staff_role": template_doc.get("staff_role"),
 				"note": line_item.get("note"),
 				"patient_instruction": line_item.get("patient_instruction"),
+				"intent": line_item.get("intent"),
+				"priority": line_item.get("priority"),
 			}
 		)
 
@@ -225,7 +227,11 @@ class PatientEncounter(Document):
 				}
 			)
 		else:
-			order.update({"template_dt": template_doc.doctype, "template_dn": template_doc.name})
+			order.update({
+				"template_dt": template_doc.doctype,
+				"template_dn": template_doc.name,
+				"patient_care_type": line_item.patient_care_type,
+			})
 
 		order.update({"order_description": description})
 		return order
