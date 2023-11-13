@@ -2,6 +2,7 @@
 import frappe
 from erpnext.setup.utils import insert_record
 from frappe import _
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 data = {
 	"desktop_icons": [
@@ -205,6 +206,7 @@ def create_custom_records():
 	create_sensitivity()
 	setup_patient_history_settings()
 	setup_service_request_masters()
+	create_sales_invoice_item_fields()
 
 
 def create_medical_departments():
@@ -953,6 +955,48 @@ def get_patient_history_config():
 			],
 		),
 	}
+
+
+def create_sales_invoice_item_fields():
+	custom_field = {
+		"Sales Invoice Item": [
+			{
+				"fieldname": "practitioner",
+				"label": "Practitioner",
+				"fieldtype": "Link",
+				"options": "Healthcare Practitioner",
+				"insert_after": "reference_dn",
+				"read_only": True,
+			},
+			{
+				"fieldname": "medical_department",
+				"label": "Medical Department",
+				"fieldtype": "Link",
+				"options": "Medical Department",
+				"insert_after": "delivered_qty",
+				"read_only": True,
+			},
+			{
+				"fieldname": "service_unit",
+				"label": "Service Unit",
+				"fieldtype": "Link",
+				"options": "Healthcare Service Unit",
+				"insert_after": "medical_department",
+				"read_only": True,
+			},
+		],
+		"Sales Invoice": [
+			{
+				"fieldname": "service_unit",
+				"label": "Service Unit",
+				"fieldtype": "Link",
+				"options": "Healthcare Service Unit",
+				"insert_after": "customer_name",
+			},
+		],
+	}
+
+	create_custom_fields(custom_field)
 
 
 def delete_custom_records():
