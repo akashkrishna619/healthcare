@@ -52,6 +52,18 @@ class SampleCollection(Document):
 
 @frappe.whitelist()
 def create_observation(selected, sample_collection, component_observations=None, child_name=None):
+	frappe.enqueue(
+		"healthcare.healthcare.doctype.sample_collection.sample_collection.insert_observation",
+		selected=selected,
+		sample_collection=sample_collection,
+		component_observations=component_observations,
+		child_name=child_name,
+		queue="long",
+		timeout=3600,
+	)
+
+
+def insert_observation(selected, sample_collection, component_observations=None, child_name=None):
 	sample_col_doc = frappe.db.get_value(
 		"Sample Collection",
 		sample_collection,
@@ -160,6 +172,14 @@ def create_observation(selected, sample_collection, component_observations=None,
 			set_status = "Collected"
 
 		frappe.db.set_value("Sample Collection", sample_collection, "status", set_status)
+
+	frappe.publish_realtime(
+		event="observation_creation_progress",
+		message="Completed",
+		doctype="Sample Collection",
+		docname=sample_collection,
+	)
+
 
 
 def create_specimen(patient, selected, component_observations):
