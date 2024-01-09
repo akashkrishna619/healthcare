@@ -156,7 +156,7 @@
   }
  ],
  "links": [],
- "modified": "2024-01-08 16:26:43.951525",
+ "modified": "2024-01-09 15:36:13.352778",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "Code Value",
@@ -212,6 +212,7 @@
  "quick_entry": 1,
  "restrict_to_domain": "Healthcare",
  "search_fields": "code_value, code_system, level",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
