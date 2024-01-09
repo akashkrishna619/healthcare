@@ -53,11 +53,28 @@ frappe.ui.form.on(cur_frm.doctype, { // nosemgrep
 	},
 
     setup_status_buttons: function(frm) {
+		var active = on_hold = revoked = unknown = entered_in_error = ""
+		if (frm.doc.doctype == "Service Request") {
+			active = "active-Request Status"
+			on_hold = "on-hold-Request Status"
+			revoked = "revoked-Request Status"
+			unknown = "unknown-Request Status"
+			entered_in_error = "entered-in-error-Request Status"
+			// replaced = "replaced-Request Status"
+		} else if (frm.doc.doctype == "Medication Request") {
+			active = "active-Medication Request Status"
+			on_hold = "on-hold-Medication Request Status"
+			revoked = "cancelled-Medication Request Status"
+			unknown = "unknown-Medication Request Status"
+			entered_in_error = "entered-in-error-Medication Request Status"
+			// replaced = "replaced-Request Status"
+		}
+
 		if (frm.doc.docstatus === 1) {
 
-			if (frm.doc.status === 'Active') {
+			if (frm.doc.status === active) {
 				frm.add_custom_button(__('On Hold'), function() {
-					frm.events.set_status(frm, 'On Hold');
+					frm.events.set_status(frm, on_hold);
 				}, __('Status'));
 
 				// frm.add_custom_button(__('Completed'), function() {
@@ -65,9 +82,9 @@ frappe.ui.form.on(cur_frm.doctype, { // nosemgrep
 				// }, __('Status'));
 			}
 
-			if (frm.doc.status === 'On Hold') {
+			if (frm.doc.status === on_hold) {
 				frm.add_custom_button(__('Active'), function() {
-					frm.events.set_status(frm, 'Active');
+					frm.events.set_status(frm, active);
 				}, __('Status'));
 
 				// frm.add_custom_button(__('Completed'), function() {
@@ -78,19 +95,15 @@ frappe.ui.form.on(cur_frm.doctype, { // nosemgrep
 		} else if (frm.doc.docstatus === 2) {
 
 			frm.add_custom_button(__('Revoked'), function() {
-				frm.events.set_status(frm, 'Revoked');
-			}, __('Status'));
-
-			frm.add_custom_button(__('Replaced'), function() {
-				frm.events.set_status(frm, 'Replaced');
+				frm.events.set_status(frm, revoked);
 			}, __('Status'));
 
 			frm.add_custom_button(__('Entered in Error'), function() {
-				frm.events.set_status(frm, 'Entered in Error');
+				frm.events.set_status(frm, entered_in_error);
 			}, __('Status'));
 
 			frm.add_custom_button(__('Unknown'), function() {
-				frm.events.set_status(frm, 'Unknown');
+				frm.events.set_status(frm, unknown);
 			}, __('Status'));
 
 		}
@@ -118,7 +131,11 @@ frappe.ui.form.on(cur_frm.doctype, { // nosemgrep
 				fieldname: 'reason_for_cancellation',
 				label: __('Reason for Cancellation'),
 				fieldtype: 'Select',
-				options: ['Revoked', 'Replaced', 'Entered in Error', 'Unknown'],
+				options: [
+					{ label: "Revoked", value: "revoked-Request Status" },
+					{ label: "Entered in Error", value: "entered-in-error-Request Status" },
+					{ label: "Unknown", value:"unknown-Request Status"},
+				],
 				reqd: 1
 			}
 		],
