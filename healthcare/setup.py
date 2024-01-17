@@ -1,6 +1,6 @@
 # isort: skip_file
 import frappe
-from erpnext.setup.utils import insert_record
+from frappe.desk.page.setup_wizard.setup_wizard import make_records as insert_record
 from frappe import _
 
 data = {
@@ -195,7 +195,7 @@ def create_default_root_service_units():
 
 
 def create_custom_records():
-	create_medical_departments()
+	# create_medical_departments()
 	create_antibiotics()
 	create_lab_test_uom()
 	create_duration()
