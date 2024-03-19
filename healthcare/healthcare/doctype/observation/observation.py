@@ -8,7 +8,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.workflow import get_workflow_name, get_workflow_state_field
-from frappe.utils import now_datetime
+from frappe.utils import flt, get_link_to_form, now_datetime
 
 from erpnext.setup.doctype.terms_and_conditions.terms_and_conditions import (
 	get_terms_and_conditions,
@@ -25,6 +25,8 @@ class Observation(Document):
 
 	def on_update(self):
 		set_diagnostic_report_status(self)
+		if self.parent_observation and self.result_data and self.permitted_data_type in ["Quantity", "Numeric"]:
+			set_calculated_result(self)
 
 	def before_insert(self):
 		set_observation_idx(self)
@@ -482,3 +484,92 @@ def set_diagnostic_report_status(doc):
 			frappe.db.set_value(
 				"Diagnostic Report", diagnostic_report.get("name"), set_value_dict, update_modified=False
 			)
+
+
+def set_calculated_result(doc):
+	if doc.parent_observation:
+		parent_template = frappe.db.get_value(
+			"Observation", doc.parent_observation, "observation_template"
+		)
+		parent_template_doc = frappe.get_cached_doc(
+			"Observation Template", parent_template
+		)
+		for component in parent_template_doc.observation_component:
+			"""
+			Data retrieval has been moved into the loop to accommodate
+			component observations, which may contain formulas utilizing
+			results from previous iterations.
+
+			"""
+			data = get_data(parent_template_doc, doc.parent_observation)
+			if data:
+				if component.based_on_formula and component.formula:
+					result = eval_formula(component, data)
+					if not result:
+						continue
+
+					result_observation_name, result_data = frappe.db.get_value(
+						"Observation",
+						{
+							"parent_observation": doc.parent_observation,
+							"observation_template": component.get(
+								"observation_template"
+							),
+						},
+						["name", "result_data"],
+					)
+					if result_observation_name and result_data != str(result):
+						frappe.db.set_value(
+							"Observation",
+							result_observation_name,
+							"result_data",
+							str(result),
+						)
+
+
+def get_data(parent_template_doc, parent_observation):
+	data = frappe._dict()
+	observation_details = frappe.get_all(
+		"Observation",
+		{"parent_observation": parent_observation},
+		["observation_template", "result_data"],
+	)
+
+	for component in parent_template_doc.observation_component:
+		result = [
+			d["result_data"]
+			for d in observation_details
+			if (
+				d["observation_template"] == component.get("observation_template")
+				and d["result_data"]
+			)
+		]
+		data[component.get("abbr")] = (
+			flt(result[0]) if (result and len(result) > 0 and result[0]) else 0
+		)
+	return data
+
+
+def eval_formula(d, data):
+	try:
+		if d.based_on_formula:
+			amount = None
+			formula = d.formula.strip().replace("\n", " ") if d.formula else None
+
+			abbrs = re.findall(r"\b[A-Za-z]+(?:\+[A-Za-z]+)*\b", formula)
+			# check the formula abbrs has result value
+			abbrs_present = all(abbr in data and data[abbr] != 0 for abbr in abbrs)
+
+			if formula and abbrs_present:
+				amount = flt(frappe.safe_eval(formula, {}, data))
+
+		return amount
+
+	except Exception as err:
+		description = _("This error can be due to invalid formula.")
+		message = _(
+			f"""Error while evaluating the {d.parenttype} {get_link_to_form(d.parenttype, d.parent)}
+			at row {d.idx}. <br><br> <b>Error:</b> {err} <br><br> <b>Hint:</b> {description}"""
+		)
+
+		frappe.throw(message, title=_("Error in formula"))
