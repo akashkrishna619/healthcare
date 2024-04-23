@@ -299,13 +299,13 @@ def get_inpatient_services_to_invoice(patient, company):
 			for item in inpatient_record_doc.items:
 				if item.stock_entry and not item.invoiced:
 					services_to_invoice.append(
-					{
-						"reference_type": "Inpatient Record Item",
-						"reference_name": item.name,
-						"service": item.item_code,
-						"qty": item.quantity,
-					}
-				)
+						{
+							"reference_type": "Inpatient Record Item",
+							"reference_name": item.name,
+							"service": item.item_code,
+							"qty": item.quantity,
+						}
+					)
 
 	else:
 		inpatient_services = frappe.db.sql(
