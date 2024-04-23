@@ -188,29 +188,37 @@ def get_encounter_items(encounter):
 	if encounter:
 		encounter_doc = frappe.get_doc("Patient Encounter", encounter)
 		for lab_presc in encounter_doc.lab_test_prescription:
+			if lab_presc.get("observation_template"):
+				item_list.append({
+					"template": lab_presc.get("observation_template"),
+					"type": "Observation Template",
+					"service_request": lab_presc.get("service_request"),
+				})
+			elif lab_presc.get("lab_test_code"):
 				item_list.append({
 					"template": lab_presc.get("lab_test_code"),
 					"type": "Lab Test Template",
 					"service_request": lab_presc.get("service_request"),
 				})
+			else:
+				continue
+
 		for pro_pres in encounter_doc.procedure_prescription:
+			if pro_pres.get("procedure"):
 				item_list.append({
 					"template": pro_pres.get("procedure"),
 					"type": "Clinical Procedure Template",
 					"service_request": pro_pres.get("service_request"),
 				})
+
 		for ther in encounter_doc.therapies:
+			if ther.get("therapy_type"):
 				item_list.append({
 					"template": ther.get("therapy_type"),
 					"type": "Therapy Type",
 					"service_request": ther.get("service_request"),
 				})
-		for obs in encounter_doc.observations:
-				item_list.append({
-					"template": obs.get("observation_template"),
-					"type": "Observation Template",
-					"service_request": obs.get("service_request"),
-				})
+
 		for drug in encounter_doc.drug_prescription:
 			item_list.append({
 				"medication": drug.get("medication"),

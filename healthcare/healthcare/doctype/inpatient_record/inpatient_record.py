@@ -751,7 +751,7 @@ def get_order_details(doc, template_doc, line_item, ip_name, medication_request=
 			"order_date": frappe.utils.nowdate(),
 			"order_time": frappe.utils.nowtime(),
 			"company": doc.company,
-			"status": "Draft",
+			"status": "draft-Medication Request Status" if medication_request else "draft-Request Status",
 			"patient": doc.get("patient"),
 			"practitioner": doc.primary_practitioner,
 			"source_doc": "Inpatient Record",
