@@ -3,6 +3,29 @@
 
 frappe.ui.form.on("Treatment Counselling", {
     refresh(frm) {
+		if (frm.doc.docstatus==1 && !frm.doc.inpatient_record) {
+			frm.add_custom_button(__('Schedule Admission'), function() {
+				frappe.confirm(__("Confirm to Schedule Admission"), function() {
+					schedule_inpatient(frm);
+				});
+			});
+		}
+
+		frm.set_query("type", "treatment_plan_template_items", function () {
+			return {
+				filters: {
+					"name": ["in", [
+						"Lab Test Template",
+						"Clinical Procedure Template",
+						"Therapy Type",
+						"Medication",
+						"Healthcare Service Unit",
+						"Observation Template"
+					]],
+				}
+			};
+		});
+
 		if (!frm.doc.__islocal) {
 			if (frm.doc.docstatus === 1) {
 				if (frm.doc.encounter_status == "Admission Scheduled" && frm.doc.status == "Active") {
@@ -81,11 +104,12 @@ var schedule_inpatient = function(frm) {
 		primary_practitioner: frm.doc.primary_practitioner,
 		secondary_practitioner: frm.doc.secondary_practitioner,
 		admission_ordered_for: frm.doc.admission_ordered_for,
-		admission_service_unit_type: frm.doc.service_unit_type,
+		admission_service_unit_type: frm.doc.admission_service_unit_type,
 		treatment_plan_template: frm.doc.treatment_plan_template,
 		expected_length_of_stay: frm.doc.expected_length_of_stay,
 		admission_instruction: frm.doc.admission_instruction,
 		admission_nursing_checklist_template: frm.doc.admission_nursing_checklist_template,
+		paid_amount: frm.doc.paid_amount,
 	}
 	frappe.call({
 		method: "healthcare.healthcare.doctype.treatment_counselling.treatment_counselling.create_ip_from_treatment_counselling",
